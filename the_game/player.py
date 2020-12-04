@@ -39,11 +39,9 @@ class Player(object):
             for pile_id, pile in card_piles.items():
                 last_card = pile[-1]
                 up_pile = 'up' in pile_id
-                increment = card - last_card
-                if not up_pile:
-                    increment *= -1
 
                 if check_valid_move(card, last_card, up_pile):
+                    increment = calculate_increment(card, last_card, up_pile)
                     valid_moves.append(Move(card, pile_id, increment))
 
         return valid_moves
