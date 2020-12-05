@@ -12,6 +12,12 @@ class Move:
     pile: str
     increment: int
 
+    def __str__(self):
+        return f'(Card: {self.card.value}, Pile: {self.pile}, Inc: {self.increment})'
+
+    def __hash__(self):
+        return hash(str(self))
+
 
 class Player(object):
 
@@ -55,6 +61,18 @@ class Player(object):
                this could happen if a -10 increment is played
         """
         valid_sequences = []
+
+        move_sets = []
+        for move_1 in valid_moves:
+            for move_2 in valid_moves:
+                if (
+                    move_1.card == move_2.card 
+                    or {move_1, move_2} in move_sets
+                    or move_1.pile == move_2.pile
+                ):
+                    continue
+                valid_sequences.append((move_1, move_2))
+                move_sets.append({move_1, move_2})
 
         for valid_move in valid_moves:
             for card in self.hand:

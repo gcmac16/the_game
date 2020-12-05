@@ -92,3 +92,22 @@ def test_valid_sequences_simple():
     assert valid_sequences[0][0] == Move(Card(3), 'p1_up', 2)
     assert valid_sequences[0][1] == Move(Card(4), 'p1_up', 1)
 
+
+def test_valid_sequences_two_piles():
+    player = Player(1)
+    player.hand = [Card(50), Card(55)]
+
+    piles = {
+        'p1_up': [Card(1)],
+        'p1_down': [Card(100)],
+    }
+    valid_sequences = player.find_valid_moves(piles)
+
+    for vs in valid_sequences:
+        print(vs[0], vs[1])
+
+    assert len(valid_sequences) == 4
+    assert valid_sequences[0] == (Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45))
+    assert valid_sequences[1] == (Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54))
+    assert valid_sequences[2] == (Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_up', 5))
+    assert valid_sequences[3] == (Move(Card(55), 'p1_down', 45), Move(Card(50), 'p1_down', 5))
