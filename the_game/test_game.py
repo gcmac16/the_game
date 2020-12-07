@@ -103,9 +103,6 @@ def test_valid_sequences_two_piles():
     }
     valid_sequences = player.find_valid_moves(piles)
 
-    for vs in valid_sequences:
-        print(vs[0], vs[1])
-
     assert len(valid_sequences) == 4
     assert valid_sequences[0] == (Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45))
     assert valid_sequences[1] == (Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54))
