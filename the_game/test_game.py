@@ -104,7 +104,38 @@ def test_valid_sequences_two_piles():
     valid_sequences = player.find_valid_moves(piles)
 
     assert len(valid_sequences) == 4
-    assert valid_sequences[0] == (Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45))
-    assert valid_sequences[1] == (Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54))
-    assert valid_sequences[2] == (Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_up', 5))
-    assert valid_sequences[3] == (Move(Card(55), 'p1_down', 45), Move(Card(50), 'p1_down', 5))
+    assert valid_sequences[0] == [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45)]
+    assert valid_sequences[1] == [Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54)]
+    assert valid_sequences[2] == [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_up', 5)]
+    assert valid_sequences[3] == [Move(Card(55), 'p1_down', 45), Move(Card(50), 'p1_down', 5)]
+
+def test_evaluate_moves():
+    moves = [
+        [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45)],
+        [Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54)],
+        [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_up', 5)],
+        [Move(Card(55), 'p1_down', 45), Move(Card(50), 'p1_down', 5)]
+    ]
+
+    player = Player(1)
+    selected_move = player.evaluate_moves(moves)
+
+    assert isinstance(selected_move, list)
+    assert selected_move == moves[3]
+
+
+def test_set_active_player():
+    g = Game(4, 6)
+    g.setup_game()
+
+    assert g.active_player_id == 0
+    g.set_active_player_id()
+    assert g.active_player_id == 1
+    g.set_active_player_id()
+    assert g.active_player_id == 2
+    g.set_active_player_id()
+    assert g.active_player_id == 3
+    g.set_active_player_id()
+    assert g.active_player_id == 0
+    
+
