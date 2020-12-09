@@ -139,3 +139,40 @@ def test_set_active_player():
     assert g.active_player_id == 0
     
 
+def test_make_move_one_card():
+    player = Player(1)
+    piles = {'p1_up': [Card(50)], 'p1_down': [Card(75)]}
+
+    player.hand = [Card(35), Card(51), Card(73)]
+    move = player.make_move(piles, min_cards=1)
+    assert len(move) == 1
+    assert move[0] == Move(Card(51), 'p1_up', 1)
+
+
+def test_make_move_full():
+    game = Game(2, 5)
+    game.players[0].hand = [Card(10), Card(75), Card(94), Card(35), Card(21)]
+    game.players[1].hand = [Card(2), Card(88), Card(87), Card(55), Card(23)]
+    game.active_player_id = 0
+
+    game.make_move()
+
+    assert len(game.piles['p1_up']) == 2
+    assert game.piles['p1_up'][-1] == Card(10)
+    assert game.piles['p1_down'][-1] == Card(94)
+    assert sum([len(pile) for pile in game.piles.values()]) == 6 
+    assert len(game.players[0].hand) == 5
+    assert game.players[0].hand[-2:] == [Card(2), Card(3)]
+    assert game.active_player_id == 1
+
+    game.make_move()
+
+    assert len(game.piles['p2_up']) == 2
+    assert len(game.piles['p1_down']) == 3
+    assert game.piles['p1_down'][-1] == Card(88)
+    assert len(game.players[1].hand) == 5
+    assert sum([len(pile) for pile in game.piles.values()]) == 8
+    assert game.players[1].hand[-2:] == [Card(4), Card(5)]
+    assert game.active_player_id == 0
+    
+

@@ -35,10 +35,11 @@ class Player(object):
     def make_move(self, card_piles: Dict[str, Card], min_cards: int=2):
         if min_cards == 1:
             valid_moves = self.find_valid_moves_first_pass(card_piles)
+            valid_moves = [[valid_move] for valid_move in valid_moves]
         else:
-            valid_moves = find_valid_moves(card_piles)
+            valid_moves = self.find_valid_moves(card_piles)
 
-        return evaluate_potential_moves(valid_moves)
+        return self.evaluate_moves(valid_moves)
 
     def evaluate_moves(self, moves: List[List[Move]]):
         move_total_increments = [

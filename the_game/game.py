@@ -13,6 +13,7 @@ class Game(object):
         self.players = {pid: Player(pid) for pid in range(n_players)}
         self.n_cards_start = n_cards_in_hand
         self.active_player_id = None
+        self.deck = Deck()
 
         self.piles = {
             'p1_up': [Card(1)],
@@ -27,7 +28,6 @@ class Game(object):
                 player.draw_cards(self.deck)
 
     def setup_game(self):
-        self.deck = Deck()
         self.deck.shuffle()
         self.set_active_player_id()
 
@@ -45,3 +45,18 @@ class Game(object):
 
     def make_move(self):
         active_player = self.players[self.active_player_id]
+        if len(self.deck) > 0:
+            moves = active_player.make_move(self.piles, min_cards=2)
+        else:
+            moves = active_player.make_move(self.piles, min_cards=1)
+
+        for move in moves:
+            self.piles[move.pile].append(move.card)
+            active_player.hand.remove(move.card)
+         
+        try:
+            active_player.draw_cards(self.deck, n=len(moves))
+        except IndexError:
+            pass  # if the deck is empty, don't draw any cards
+
+        self.set_active_player_id()
