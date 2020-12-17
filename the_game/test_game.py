@@ -205,7 +205,7 @@ def test_no_valid_move_error():
         'p1_down': [Card(20)],
     }
 
-    g.players[0].hand = [Card(50), Card(55)]
+    g.players[0].hand = [Card(50), Card(55), Card(43)]
     
     with pytest.raises(NoValidMoveError):
         g.make_move()
@@ -226,3 +226,18 @@ def test_no_valid_move_play_one_card():
     with pytest.raises(NoValidMoveError):
         g.make_move()
 
+
+def test_game_over():
+    g = Game(2, 2)
+    g.players[0].hand = [Card(10)]
+    g.players[1].hand = []
+    g.deck = Deck(card_range=range(0))
+    g.active_player_id = 0
+
+    g.piles = {'p1_down': [Card(11)]}
+    assert g.n_cards_to_play == 1
+    g.make_move()
+
+    assert g.game_won
+
+    

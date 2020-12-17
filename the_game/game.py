@@ -44,9 +44,17 @@ class Game(object):
     
     @property
     def n_cards_to_play(self):
+        print(self.deck)
         if len(self.deck) > 0:
             return 2
         return 1
+
+    @property
+    def game_won(self):
+        """Two criteria for winning game: deck is empty and all players have empty hand"""
+        if len(self.deck) == 0 and sum([len(player.hand) for player in self.players.values()]) == 0:
+            return True
+        return False
 
     def set_active_player_id(self):
         if self.active_player_id is None:

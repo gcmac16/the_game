@@ -8,8 +8,8 @@ from .card import Card
 
 class Deck(object):
 
-    def __init__(self, seed: Optional[int] = None):
-        self.cards = [Card(i) for i in range(2, 100)]
+    def __init__(self, seed: Optional[int] = None, card_range: range = range(2, 100)):
+        self.cards = [Card(i) for i in card_range]
         self.seed = seed
 
     def shuffle(self):
