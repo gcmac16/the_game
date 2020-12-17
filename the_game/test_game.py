@@ -1,7 +1,9 @@
 import unittest
+import pytest
 
 from .card import Card
 from .deck import Deck
+from .exceptions import NoValidMoveError
 from .game import Game
 from .move import Move
 from .player import Player
@@ -195,4 +197,32 @@ def test_end_of_game_one_card_need_two():
         'p2_down': [Card(15)]
     }
     
+def test_no_valid_move_error():
+    g = Game(2, 2)
+    g.active_player_id = 0
+    g.piles = {
+        'p1_up': [Card(70)],
+        'p1_down': [Card(20)],
+    }
+
+    g.players[0].hand = [Card(50), Card(55)]
     
+    with pytest.raises(NoValidMoveError):
+        g.make_move()
+
+def test_no_valid_move_play_one_card():
+    g = Game(2, 2)
+    g.active_player_id = 0
+    g.piles = {
+        'p1_up': [Card(70)],
+        'p2_down': [Card(5)],
+    }
+
+    g.players[0].hand = [Card(50), Card(55)]
+    g.deck = []
+
+    assert g.n_cards_to_play == 1
+
+    with pytest.raises(NoValidMoveError):
+        g.make_move()
+

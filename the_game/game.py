@@ -7,6 +7,7 @@ from typing import (
 
 from .card import Card
 from .deck import Deck
+from .exceptions import NoValidMoveError
 from .move import Move
 from .player import Player
 
@@ -40,6 +41,12 @@ class Game(object):
     def setup_game(self):
         self.deck.shuffle()
         self.set_active_player_id()
+    
+    @property
+    def n_cards_to_play(self):
+        if len(self.deck) > 0:
+            return 2
+        return 1
 
     def set_active_player_id(self):
         if self.active_player_id is None:
@@ -55,10 +62,10 @@ class Game(object):
 
     def make_move(self, print_move: bool = True):
         active_player = self.players[self.active_player_id]
-        if len(self.deck) > 0:
-            moves = active_player.get_cards_for_move(self.piles)
-        else:
-            moves = active_player.get_cards_for_move(self.piles, n_cards_to_play=1)
+        moves = active_player.get_cards_for_move(self.piles, n_cards_to_play=self.n_cards_to_play)
+
+        if len(moves) == 0:
+            raise NoValidMoveError
         
         for move in moves:
             print(f'Player {self.active_player_id} played {move.card} on {move.pile_id}')

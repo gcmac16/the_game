@@ -6,6 +6,7 @@ from typing import (
 )
 
 from .card import Card
+from .exceptions import NoValidMoveError
 from .move import Move
 
 
@@ -29,13 +30,17 @@ class Player(object):
         n_cards_to_play: int = 2
     ) -> List[Move]:
         # TODO: Break up the logic into their own functions
-        moves = []
-        card_piles_ = copy.deepcopy(card_piles)
-        if self.player_style == 'greedy':
+        if self.player_style == 'greedy' or n_cards_to_play == 1:
+            moves = []
+            card_piles_ = copy.deepcopy(card_piles)
+
             for _ in range(n_cards_to_play):
                 best_move = self.find_best_move(card_piles_)
+                if best_move is None:
+                    continue
                 moves.append(best_move)
                 card_piles_[best_move.pile_id].append(best_move.card)
+            
             return moves
         
         valid_moves = self.find_valid_moves(card_piles)
@@ -48,16 +53,28 @@ class Player(object):
             # remove card that was played from the players hand
             self.hand.remove(valid_move.card)
             next_move = self.find_best_move(card_piles_)
-            valid_sequences.append([valid_move, next_move])
+            if next_move: 
+                valid_sequences.append([valid_move, next_move])
             # put the card back in the players hand
             self.hand.append(valid_move.card)
-            
-        return sorted(valid_sequences, key=lambda valid_sequence: sum([vm.increment for vm in valid_sequence]))[0]
-        
+           
+        try:
+            print(valid_sequences)
+            best_sequence = sorted(valid_sequences, key=lambda valid_sequence: sum([vm.increment for vm in valid_sequence]))[0]
+        except IndexError:
+            print("HERE MOTHERFUCKER")
+            return []
+
+        return best_sequence
         
     def find_best_move(self, card_piles: Dict[str, List[Card]]) -> Move:
         valid_moves = self.find_valid_moves(card_piles)
-        return sorted(valid_moves, key=lambda valid_move: valid_move.increment)[0]
+        try:
+            best_move = sorted(valid_moves, key=lambda valid_move: valid_move.increment)[0]
+        except IndexError:
+            return None
+
+        return best_move
     
     def find_valid_moves(self, card_piles: Dict[str, List[Card]]) -> List[Move]:
         valid_moves = []
