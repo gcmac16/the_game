@@ -1,19 +1,29 @@
 from random import (
     shuffle,
 )
+from typing import (
+    Optional,
+)
 
-from .player import Player
-from .deck import Deck
 from .card import Card
-
+from .deck import Deck
+from .move import Move
+from .player import Player
 
 class Game(object):
 
-    def __init__(self, n_players: int, n_cards_in_hand: int):
-        self.players = {pid: Player(pid) for pid in range(n_players)}
+    def __init__(
+            self, 
+            n_players: int, 
+            n_cards_in_hand: int,
+            deck_seed: Optional[int] = None,
+            player_style: str = 'optimized'
+    ):
+        self.players = {pid: Player(pid, player_style) for pid in range(n_players)}
         self.n_cards_start = n_cards_in_hand
         self.active_player_id = None
-        self.deck = Deck()
+        self.player_style = player_style
+        self.deck = Deck(deck_seed)
 
         self.piles = {
             'p1_up': [Card(1)],
@@ -43,15 +53,16 @@ class Game(object):
         else:
             self.active_player_id = 0
 
-    def make_move(self):
+    def make_move(self, print_move: bool = True):
         active_player = self.players[self.active_player_id]
         if len(self.deck) > 0:
-            moves = active_player.make_move(self.piles, min_cards=2)
+            moves = active_player.get_cards_for_move(self.piles)
         else:
-            moves = active_player.make_move(self.piles, min_cards=1)
-
+            moves = active_player.get_cards_for_move(self.piles, n_cards_to_play=1)
+        
         for move in moves:
-            self.piles[move.pile].append(move.card)
+            print(f'Player {self.active_player_id} played {move.card} on {move.pile_id}')
+            self.piles[move.pile_id].append(move.card)
             active_player.hand.remove(move.card)
          
         try:

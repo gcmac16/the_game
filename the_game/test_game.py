@@ -3,7 +3,7 @@ import unittest
 from .card import Card
 from .deck import Deck
 from .game import Game
-from .player import Move
+from .move import Move
 from .player import Player
 
 
@@ -52,16 +52,17 @@ def test_shuffle():
     assert game.deck.cards[:5] != [Card(i) for i in range(2, 7)]
 
 
-def test_valid_moves_first_pass_one_card():
+def test_valid_moves_one_card():
     player = Player(1)
     player.hand = [Card(50)]
 
     g = Game(4, 6)
-    valid_moves = player.find_valid_moves_first_pass(g.piles)
+    valid_moves = player.find_valid_moves(g.piles)
     assert len(valid_moves) == 4
     assert [vm.increment for vm in valid_moves] == [49, 49, 50, 50]
+
     
-def test_valid_moves_first_pass_diff_ten():
+def test_valid_moves_diff_ten():
     player = Player(1)
     player.hand = [Card(50)]
 
@@ -71,27 +72,28 @@ def test_valid_moves_first_pass_diff_ten():
         'p1_down': [Card(100)],
         'p2_down': [Card(10)]
     }
-    valid_moves = player.find_valid_moves_first_pass(piles)
+    valid_moves = player.find_valid_moves(piles)
 
     assert len(valid_moves) == 3
     assert valid_moves[0].increment == 10
     assert valid_moves[1].increment == -10
     assert valid_moves[2].increment == 50
-    assert 'p2_down' not in [vm.pile for vm in valid_moves]
+    assert 'p2_down' not in [vm.pile_id for vm in valid_moves]
     
-def test_valid_sequences_simple():
+
+def test_valid_sequences_simple_greedy():
     player = Player(1)
     player.hand = [Card(3), Card(4)]
 
     piles = {
         'p1_up': [Card(1)]
     }
-    valid_sequences = player.find_valid_moves(piles)
-
-    assert len(valid_sequences) == 1
-    assert valid_sequences[0][0] == Move(Card(3), 'p1_up', 2)
-    assert valid_sequences[0][1] == Move(Card(4), 'p1_up', 1)
-
+    moves = player.get_cards_for_move(piles)
+    
+    assert len(moves) == 2
+    assert moves[0] == Move(Card(3), 'p1_up', Card(1))
+    assert moves[1] == Move(Card(4), 'p1_up', Card(3))
+    
 
 def test_valid_sequences_two_piles():
     player = Player(1)
@@ -101,29 +103,28 @@ def test_valid_sequences_two_piles():
         'p1_up': [Card(1)],
         'p1_down': [Card(100)],
     }
-    valid_sequences = player.find_valid_moves(piles)
+    moves = player.get_cards_for_move(piles)
 
-    assert len(valid_sequences) == 4
-    assert valid_sequences[0] == [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45)]
-    assert valid_sequences[1] == [Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54)]
-    assert valid_sequences[2] == [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_up', 5)]
-    assert valid_sequences[3] == [Move(Card(55), 'p1_down', 45), Move(Card(50), 'p1_down', 5)]
-
-def test_evaluate_moves():
-    moves = [
-        [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_down', 45)],
-        [Move(Card(50), 'p1_down', 50), Move(Card(55), 'p1_up', 54)],
-        [Move(Card(50), 'p1_up', 49), Move(Card(55), 'p1_up', 5)],
-        [Move(Card(55), 'p1_down', 45), Move(Card(50), 'p1_down', 5)]
-    ]
-
-    player = Player(1)
-    selected_move = player.evaluate_moves(moves)
-
-    assert isinstance(selected_move, list)
-    assert selected_move == moves[3]
-
-
+    assert len(moves) == 2
+    assert moves[0] == Move(Card(55), 'p1_down', Card(100))
+    assert moves[1] == Move(Card(50), 'p1_down', Card(55))
+    
+    
+def test_valid_sequences_simple_optimized():
+    player = Player(1, player_style='optimized')
+    
+    player.hand = [Card(95), Card(90), Card(85)]
+    piles = {
+        'p1_down': [Card(91)],
+    }
+    
+    moves = player.get_cards_for_move(piles)
+    
+    assert len(moves) == 2
+    assert moves[0] == Move(Card(85), 'p1_down', Card(91))
+    assert moves[1] == Move(Card(95), 'p1_down', Card(85))
+    
+    
 def test_set_active_player():
     g = Game(4, 6)
     g.setup_game()
@@ -139,18 +140,26 @@ def test_set_active_player():
     assert g.active_player_id == 0
     
 
-def test_make_move_one_card():
-    player = Player(1)
-    piles = {'p1_up': [Card(50)], 'p1_down': [Card(75)]}
+def test_no_duplicate_cards_in_move():
 
-    player.hand = [Card(35), Card(51), Card(73)]
-    move = player.make_move(piles, min_cards=1)
-    assert len(move) == 1
-    assert move[0] == Move(Card(51), 'p1_up', 1)
-
-
+    player = Player(1, player_style='optimized')
+    player.hand = [Card(10), Card(75), Card(94), Card(35), Card(21)]
+    
+    piles = {
+        'p1_up': [Card(1)],
+        'p2_up': [Card(1)],
+        'p1_down': [Card(100)],
+        'p2_down': [Card(100)],
+    }
+    
+    moves = player.get_cards_for_move(piles)
+    
+    assert len(moves) == 2
+    assert set(moves) == {Move(Card(94), 'p1_down', Card(100)), Move(Card(10), 'p1_up', Card(1))}
+    
+    
 def test_make_move_full():
-    game = Game(2, 5)
+    game = Game(2, 5, player_style='optimized')
     game.players[0].hand = [Card(10), Card(75), Card(94), Card(35), Card(21)]
     game.players[1].hand = [Card(2), Card(88), Card(87), Card(55), Card(23)]
     game.active_player_id = 0
@@ -175,4 +184,15 @@ def test_make_move_full():
     assert game.players[1].hand[-2:] == [Card(4), Card(5)]
     assert game.active_player_id == 0
     
-
+def test_end_of_game_one_card_need_two():
+    player = Player(1)
+    player.hand = [Card(8), Card(26), Card(73)]
+    
+    piles = {
+        'p1_up': [Card(80)],
+        'p2_up': [Card(85)],
+        'p1_down': [Card(10)],
+        'p2_down': [Card(15)]
+    }
+    
+    
