@@ -59,10 +59,11 @@ class Player(object):
             self.hand.append(valid_move.card)
            
         try:
-            print(valid_sequences)
-            best_sequence = sorted(valid_sequences, key=lambda valid_sequence: sum([vm.increment for vm in valid_sequence]))[0]
+            best_sequence = sorted(
+                valid_sequences, 
+                key=lambda valid_sequence: sum([vm.increment for vm in valid_sequence])
+            )[0]
         except IndexError:
-            print("HERE MOTHERFUCKER")
             return []
 
         return best_sequence

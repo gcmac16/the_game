@@ -11,12 +11,14 @@ from .exceptions import NoValidMoveError
 from .move import Move
 from .player import Player
 
+
 class Game(object):
 
     def __init__(
             self, 
             n_players: int, 
             n_cards_in_hand: int,
+            logger = None,
             deck_seed: Optional[int] = None,
             player_style: str = 'optimized'
     ):
@@ -25,6 +27,7 @@ class Game(object):
         self.active_player_id = None
         self.player_style = player_style
         self.deck = Deck(deck_seed)
+        self.logger = logger
 
         self.piles = {
             'p1_up': [Card(1)],
@@ -76,7 +79,7 @@ class Game(object):
             raise NoValidMoveError
         
         for move in moves:
-            print(f'Player {self.active_player_id} played {move.card} on {move.pile_id}')
+            self.logger.info(f'Player {self.active_player_id} played {move.card} on {move.pile_id}')
             self.piles[move.pile_id].append(move.card)
             active_player.hand.remove(move.card)
          
