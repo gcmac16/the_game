@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 
 from the_game.exceptions import NoValidMoveError
@@ -29,7 +30,6 @@ class SimGame(object):
 
     def run_sim(self):
         for _ in range(self.n_games):
-            logger.info('Starting New Game')
             game = Game(self.n_players, 
                         self.n_cards,
                         logger,
@@ -45,7 +45,6 @@ class SimGame(object):
             logger.info(f"Player {player_id} dealt hand {player.hand}")
 
         while not game.game_won:
-            game.make_move()
             try:
                 game.make_move()
             except NoValidMoveError:
@@ -54,23 +53,78 @@ class SimGame(object):
                     sum([len(p.hand) for p in game.players.values()])
                 ])
 
-                logger.info(f"Game Lost - {n_cards_remaining} cards remaining")
+                logger.info(
+                    json.dumps({
+                        'game_event': 'game_over', 
+                        'game_won': False,
+                        'cards_remaining': n_cards_remaining,
+                        'cards_in_deck_remaining': len(game.deck),
+                    })
+                )
+
                 return
 
-        logger.info("Game Won")
+        logger.info(
+            json.dumps({
+                'game_event': 'game_over', 
+                'game_won': True,
+                'cards_remaining': 0
+            })
+        )
         return 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--n_games', action='store', type=int, default=100, required=False)
-    parser.add_argument('--player_style', action='store', type=str, default='optimized', required=False)
-    parser.add_argument('--n_players', action='store', type=int, default=3, required=False)
-    parser.add_argument('--n_cards', action='store', type=str, default=6, required=False)
+    parser.add_argument(
+        '--n_games',
+        action='store', 
+        type=int, 
+        default=100, 
+        required=False,
+    )
+    parser.add_argument(
+        '--player_style', 
+        action='store', 
+        type=str, 
+        default='optimized', 
+        required=False,
+    )
+    parser.add_argument(
+        '--n_players', 
+        action='store',
+        type=int,
+        default=3,
+        required=False
+    )
+    parser.add_argument(
+        '--n_cards', 
+        action='store',
+        type=str,
+        default=6,
+        required=False
+    )
+    parser.add_argument(
+        '--first_move_selection', 
+        action='store', 
+        type=str,
+        default='optimized', 
+        required=False
+    )
     args = parser.parse_args()
 
-    log_str = f"Starting simulation with args n_games = {args.n_games}, player_style = {args.player_style}"
-    logger.info(log_str)
+    log_body = {
+        'game_event': 'start_game',
+        'game_parameters': {
+            'player_style': args.player_style,
+            'n_players': args.n_players,
+            'n_cards': args.n_cards,
+            'first_move_selection': args.first_move_selection,
+        }
+    }
+
+
+    logger.info(json.dumps(log_body))
 
     sim = SimGame(n_games=args.n_games, player_style=args.player_style)
     sim.run_sim()

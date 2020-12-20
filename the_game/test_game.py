@@ -240,4 +240,12 @@ def test_game_over():
 
     assert g.game_won
 
-    
+  
+def test_find_lowest_first_move_increment():
+    g = Game(3, 6, player_style='optimized', first_move_selection='optimized')
+    g.players[0].hand = [Card(10), Card(15), Card(58), Card(85)]
+    g.players[1].hand = [Card(94), Card(88), Card(5), Card(45)]
+    g.players[2].hand = [Card(3), Card(23), Card(48), Card(52)]
+
+    assert g.find_lowest_first_move_increment() == 1
+

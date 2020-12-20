@@ -1,3 +1,4 @@
+import json
 from random import (
     shuffle,
 )
@@ -20,7 +21,8 @@ class Game(object):
             n_cards_in_hand: int,
             logger = None,
             deck_seed: Optional[int] = None,
-            player_style: str = 'optimized'
+            player_style: str = 'optimized',
+            first_move_selection: str = 'first_player',
     ):
         self.players = {pid: Player(pid, player_style) for pid in range(n_players)}
         self.n_cards_start = n_cards_in_hand
@@ -28,6 +30,7 @@ class Game(object):
         self.player_style = player_style
         self.deck = Deck(deck_seed)
         self.logger = logger
+        self.first_move_selection = first_move_selection
 
         self.piles = {
             'p1_up': [Card(1)],
@@ -47,7 +50,6 @@ class Game(object):
     
     @property
     def n_cards_to_play(self):
-        print(self.deck)
         if len(self.deck) > 0:
             return 2
         return 1
@@ -59,17 +61,46 @@ class Game(object):
             return True
         return False
 
+    def find_lowest_first_move_increment(self):
+        min_increment = 100
+        best_move_player_id = None
+
+        for player_id, player in self.players.items():
+            best_move = player.get_cards_for_move(self.piles)
+            total_increment = sum([move.increment for move in best_move])
+            if total_increment < min_increment:
+                min_increment = total_increment
+                best_move_player_id = player_id
+
+        return best_move_player_id
+
     def set_active_player_id(self):
         if self.active_player_id is None:
-            # TODO: on first setup, we should check for player that 
-            # has the best first move possible and then go from there
-            self.active_player_id = 0
-            return
+            if self.first_move_selection == 'first_player':
+                self.active_player_id = 0
+            elif self.first_move_selection == 'optimized':
+                self.active_player_id = self.find_lowest_first_move_increment()
+            else:
+                raise ValueError("First move selection must be 'first_player' or 'optimized'")
+            return  
 
         if (pid := self.active_player_id + 1) < len(self.players):
             self.active_player_id = pid
         else:
             self.active_player_id = 0
+
+    def log_move(self, move: Move):
+        if self.logger is None:
+            return
+        log_body = {
+            'active_player_id': self.active_player_id,
+            'deck': self.deck.cards,
+            'piles': self.piles,
+            'players': {pid: player.hand for pid, player in self.players.items()},
+            'move_str': f"Player {self.active_player_id} played {move.card} on {move.pile_id}"
+        }
+
+        self.logger.info(json.dumps(log_body))
 
     def make_move(self, print_move: bool = True):
         active_player = self.players[self.active_player_id]
@@ -79,9 +110,9 @@ class Game(object):
             raise NoValidMoveError
         
         for move in moves:
-            self.logger.info(f'Player {self.active_player_id} played {move.card} on {move.pile_id}')
             self.piles[move.pile_id].append(move.card)
             active_player.hand.remove(move.card)
+            self.log_move(move)
          
         try:
             active_player.draw_cards(self.deck, n=len(moves))

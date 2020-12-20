@@ -1,5 +1,6 @@
 from .card import Card
 
+
 class Move:
     def __init__(self, card: Card, pile_id: str, top_card: Card):
         self.card = card
