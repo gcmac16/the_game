@@ -40,6 +40,10 @@ class Player(object):
                     continue
                 moves.append(best_move)
                 card_piles_[best_move.pile_id].append(best_move.card)
+                self.hand.remove(best_move.card)
+
+            for move in moves:
+                self.hand.append(move.card)
             
             return moves
         

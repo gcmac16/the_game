@@ -1,12 +1,13 @@
 import unittest
 import pytest
 
-from .card import Card
-from .deck import Deck
-from .exceptions import NoValidMoveError
-from .game import Game
-from .move import Move
-from .player import Player
+from the_game.card import Card
+from the_game.deck import Deck
+from the_game.exceptions import NoValidMoveError
+from the_game.game import Game
+from the_game.move import Move
+from the_game.player import Player
+from sim_game import SimGame
 
 
 def test_deal_1_player():
@@ -33,7 +34,6 @@ def test_multi_deal():
 def test_game_deal():
     game = Game(4, 6)
     game.setup_game()
-    game.deal_cards()
 
     assert len(game.players) == 4
     for player in game.players.values():
@@ -247,5 +247,33 @@ def test_find_lowest_first_move_increment():
     g.players[1].hand = [Card(94), Card(88), Card(5), Card(45)]
     g.players[2].hand = [Card(3), Card(23), Card(48), Card(52)]
 
-    assert g.find_lowest_first_move_increment() == 1
+    g.set_active_player_id()
+    assert g.active_player_id == 1
 
+    g = Game(3, 6, player_style='optimized', first_move_selection='optimized')
+    g.players[0].hand = [Card(i) for i in [18, 28, 52, 58, 62, 98]]
+    g.players[1].hand = [Card(i) for i in [8, 31, 34, 45, 46, 99]] 
+    g.players[2].hand = [Card(i) for i in [12, 40, 51, 79, 88, 96]]
+
+    g.set_active_player_id()
+    assert g.active_player_id == 1
+
+    g = Game(3, 6, player_style='optimized', first_move_selection='first_player')
+    g.players[0].hand = [Card(i) for i in [18, 28, 52, 58, 62, 98]]
+    g.players[1].hand = [Card(i) for i in [8, 31, 34, 45, 46, 99]] 
+    g.players[2].hand = [Card(i) for i in [12, 40, 51, 79, 88, 96]]
+
+    g.set_active_player_id()
+    assert g.active_player_id == 0
+
+
+def test_sim_game():
+    sg = SimGame(
+        n_games=1,
+        player_style='optimized',
+        first_move_selection='optimized',
+        n_players=3,
+        n_cards=6
+    )
+
+    assert sg.get_new_game().first_move_selection == 'optimized'

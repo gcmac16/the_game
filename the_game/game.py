@@ -46,6 +46,7 @@ class Game(object):
 
     def setup_game(self):
         self.deck.shuffle()
+        self.deal_cards()
         self.set_active_player_id()
     
     @property
@@ -64,10 +65,12 @@ class Game(object):
     def find_lowest_first_move_increment(self):
         min_increment = 100
         best_move_player_id = None
+        player_increments = {'game_event': 'first_move_increment'}
 
         for player_id, player in self.players.items():
             best_move = player.get_cards_for_move(self.piles)
             total_increment = sum([move.increment for move in best_move])
+            player_increments[player_id] = total_increment 
             if total_increment < min_increment:
                 min_increment = total_increment
                 best_move_player_id = player_id
@@ -93,6 +96,7 @@ class Game(object):
         if self.logger is None:
             return
         log_body = {
+            'game_event': 'move',
             'active_player_id': self.active_player_id,
             'deck': self.deck.cards,
             'piles': self.piles,

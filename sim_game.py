@@ -19,7 +19,8 @@ class SimGame(object):
         self,
         n_games: int = 100,
         player_style: str = 'optimized',
-        n_players: int = 4,
+        first_move_selection = 'optimized',
+        n_players: int = 3,
         n_cards: int = 6
     ):
         self.logger = logger
@@ -27,22 +28,45 @@ class SimGame(object):
         self.player_style = player_style
         self.n_players = n_players
         self.n_cards = n_cards
+        self.first_move_selection = first_move_selection
+
+    def get_new_game(self):
+        return Game(self.n_players, 
+            self.n_cards,
+            logger,
+            player_style=self.player_style,
+            first_move_selection=self.first_move_selection
+        )
+
 
     def run_sim(self):
-        for _ in range(self.n_games):
-            game = Game(self.n_players, 
-                        self.n_cards,
-                        logger,
-                        player_style=self.player_style)
-
+        for game_num in range(self.n_games):
+            if game_num % 100 == 0:
+                print(f"Completed {game_num} of {self.n_games}")
+            
+            game = self.get_new_game()
             self.sim_single_game(game)
 
     def sim_single_game(self, game: Game):
         game.setup_game()
-        game.deal_cards()
 
-        for player_id, player in game.players.items():
-            logger.info(f"Player {player_id} dealt hand {player.hand}")
+        player_cards = {
+            player_id: sorted(player.hand)
+            for player_id, player in game.players.items()
+        }
+
+        log_body = {
+            'game_event': 'start_game',
+            'game_parameters': {
+                'player_style': self.player_style,
+                'n_players': self.n_players,
+                'n_cards': self.n_cards,
+                'first_move_selection': self.first_move_selection,
+            },
+            'starting_cards': player_cards
+        }
+
+        logger.info(json.dumps(log_body))
 
         while not game.game_won:
             try:
@@ -113,18 +137,11 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    log_body = {
-        'game_event': 'start_game',
-        'game_parameters': {
-            'player_style': args.player_style,
-            'n_players': args.n_players,
-            'n_cards': args.n_cards,
-            'first_move_selection': args.first_move_selection,
-        }
-    }
-
-
-    logger.info(json.dumps(log_body))
-
-    sim = SimGame(n_games=args.n_games, player_style=args.player_style)
+    sim = SimGame(
+        n_games=args.n_games, 
+        player_style=args.player_style, 
+        first_move_selection=args.first_move_selection,
+        n_players=args.n_players,
+        n_cards=args.n_cards
+    )
     sim.run_sim()
